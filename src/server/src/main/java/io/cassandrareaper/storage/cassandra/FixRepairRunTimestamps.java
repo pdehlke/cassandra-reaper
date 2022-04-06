@@ -46,11 +46,11 @@ public final class FixRepairRunTimestamps {
 
     Statement getRepairRunPrepStmt
         = new SimpleStatement("SELECT id,state,start_time,pause_time,end_time FROM repair_run")
-            .setConsistencyLevel(ConsistencyLevel.QUORUM);
+            .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
 
     PreparedStatement updateRepairRunPrepStmt = session
         .prepare("INSERT INTO repair_run (id,start_time,pause_time,end_time) VALUES(?, ?, ?, ?)")
-        .setConsistencyLevel(ConsistencyLevel.EACH_QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
 
     ResultSet resultSet = session.execute(getRepairRunPrepStmt);
     int rowsRead = 0;

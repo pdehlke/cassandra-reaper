@@ -391,10 +391,10 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
             .prepare(
                 "INSERT INTO cluster(name, partitioner, seed_hosts, properties, state, last_contact)"
                     + " values(?, ?, ?, ?, ?, ?)")
-            .setConsistencyLevel(ConsistencyLevel.QUORUM);
+            .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     getClusterPrepStmt = session
         .prepare("SELECT * FROM cluster WHERE name = ?")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM)
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
         .setRetryPolicy(DowngradingConsistencyRetryPolicy.INSTANCE);
     deleteClusterPrepStmt = session.prepare("DELETE FROM cluster WHERE name = ?");
     insertRepairRunPrepStmt = session
@@ -403,13 +403,13 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
                 + "start_time, end_time, pause_time, intensity, last_event, segment_count, repair_parallelism, "
                 + "tables, adaptive_schedule) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     insertRepairRunNoStatePrepStmt = session
         .prepare(
             "INSERT INTO repair_run(id, cluster_name, repair_unit_id, cause, owner, creation_time, "
                 + "intensity, last_event, segment_count, repair_parallelism, tables, adaptive_schedule) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     insertRepairRunClusterIndexPrepStmt
         = session.prepare("INSERT INTO repair_run_by_cluster_v2(cluster_name, id, repair_run_state) values(?, ?, ?)");
     insertRepairRunUnitIndexPrepStmt
@@ -419,7 +419,7 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
             "SELECT id,cluster_name,repair_unit_id,cause,owner,state,creation_time,start_time,end_time,"
                 + "pause_time,intensity,last_event,segment_count,repair_parallelism,tables,adaptive_schedule "
                 + "FROM repair_run WHERE id = ? LIMIT 1")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     getRepairRunForClusterPrepStmt = session.prepare(
         "SELECT * FROM repair_run_by_cluster_v2 WHERE cluster_name = ? limit ?");
     getRepairRunForUnitPrepStmt = session.prepare("SELECT * FROM repair_run_by_unit WHERE repair_unit_id = ?");
@@ -435,10 +435,10 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
             "INSERT INTO repair_unit_v1(id, cluster_name, keyspace_name, column_families, "
                 + "incremental_repair, nodes, \"datacenters\", blacklisted_tables, repair_thread_count, timeout) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     getRepairUnitPrepStmt = session
         .prepare("SELECT * FROM repair_unit_v1 WHERE id = ?")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     deleteRepairUnitPrepStmt = session.prepare("DELETE FROM repair_unit_v1 WHERE id = ?");
     insertRepairSegmentPrepStmt = session
         .prepare(
@@ -528,11 +528,11 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
                     + "creation_time, owner, pause_time, segment_count_per_node, "
                     + "adaptive, percent_unrepaired_threshold, last_run) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            .setConsistencyLevel(ConsistencyLevel.QUORUM);
+            .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     getRepairSchedulePrepStmt
         = session
             .prepare("SELECT * FROM repair_schedule_v1 WHERE id = ?")
-            .setConsistencyLevel(ConsistencyLevel.QUORUM);
+            .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     insertRepairScheduleByClusterAndKsPrepStmt = session.prepare(
         "INSERT INTO repair_schedule_by_cluster_and_keyspace(cluster_name, keyspace_name, repair_schedule_id)"
             + " VALUES(?, ?, ?)");
@@ -550,14 +550,14 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
         .prepare(
             "INSERT INTO leader(leader_id, reaper_instance_id, reaper_instance_host, last_heartbeat)"
                 + "VALUES(?, ?, ?, " + timeUdf + "(now())) IF NOT EXISTS USING TTL ?")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     renewLeadPrepStmt = session
         .prepare(
             "UPDATE leader USING TTL ? SET reaper_instance_id = ?, reaper_instance_host = ?,"
                 + " last_heartbeat = " + timeUdf + "(now()) WHERE leader_id = ? IF reaper_instance_id = ?")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     releaseLeadPrepStmt = session.prepare("DELETE FROM leader WHERE leader_id = ? IF reaper_instance_id = ?")
-        .setConsistencyLevel(ConsistencyLevel.QUORUM);
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
   }
 
   private void prepareMetricStatements() {
@@ -591,8 +591,8 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
             "UPDATE running_repairs USING TTL ?"
             + " SET reaper_instance_host = ?, reaper_instance_id = ?, segment_id = ?"
             + " WHERE repair_id = ? AND node = ? IF reaper_instance_id = ?")
-        .setSerialConsistencyLevel(ConsistencyLevel.SERIAL)
-        .setConsistencyLevel(ConsistencyLevel.QUORUM)
+        .setSerialConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
         .setIdempotent(false);
 
     getRunningRepairsPrepStmt
@@ -601,7 +601,7 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
           "select repair_id, node, reaper_instance_host, reaper_instance_id, segment_id"
           + " FROM running_repairs"
           + " WHERE repair_id = ?")
-      .setConsistencyLevel(ConsistencyLevel.QUORUM);
+      .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
 
     storePercentRepairedForSchedulePrepStmt
       = session
@@ -1156,7 +1156,7 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
               segment.getId(),
               segment.hasEndTime() ? segment.getEndTime().toDate() : null));
     } else if (State.STARTED == segment.getState()) {
-      updateRepairSegmentBatch.setConsistencyLevel(ConsistencyLevel.EACH_QUORUM);
+      updateRepairSegmentBatch.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
     }
     session.execute(updateRepairSegmentBatch);
     return true;
@@ -1821,7 +1821,7 @@ public final class CassandraStorage implements IStorage, IDistributedStorage {
         int received,
         int retry) {
 
-      Preconditions.checkState(WriteType.CAS != type ||  ConsistencyLevel.SERIAL == cl);
+      Preconditions.checkState(WriteType.CAS != type ||  ConsistencyLevel.LOCAL_QUORUM == cl);
 
       return null != stmt && !Objects.equals(Boolean.FALSE, stmt.isIdempotent())
           ? RetryDecision.retry(cl)
