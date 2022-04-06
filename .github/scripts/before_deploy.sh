@@ -19,8 +19,7 @@ set -xe
 mkdir -p src/packages
 
 export VERSION=$(printf 'VER\t${project.version}' | mvn help:evaluate | grep '^VER' | cut -f2)
-if [ "${GITHUB_REF}" = "refs/heads/master" ]
-then
+if [ "${GITHUB_REF}" = "refs/heads/master" ]; then
     mkdir -p cassandra-reaper-master/server/target
     cp -R src/packaging/bin cassandra-reaper-master/
     cp src/server/target/cassandra-reaper-*.jar cassandra-reaper-master/server/target
@@ -36,16 +35,15 @@ then
     tar czf cassandra-reaper-${VERSION}.tar.gz cassandra-reaper-master/
     sudo mv cassandra-reaper-${VERSION}.tar.gz src/packages/
     export GIT_HASH=$(git log --pretty=format:'%h' -n 1)
-    docker login -u $DOCKER_USER -p $DOCKER_PASS
-    export REPO=thelastpickle/cassandra-reaper
-    mvn -B -pl src/server/ docker:build -Ddocker.directory=src/server/src/main/docker
-    docker tag cassandra-reaper:latest $REPO:master
-    docker push $REPO:master
-    docker tag cassandra-reaper:latest $REPO:$GIT_HASH
-    docker push $REPO:$GIT_HASH
+    # docker login -u $DOCKER_USER -p $DOCKER_PASS
+    # export REPO=thelastpickle/cassandra-reaper
+    # mvn -B -pl src/server/ docker:build -Ddocker.directory=src/server/src/main/docker
+    # docker tag cassandra-reaper:latest $REPO:master
+    # docker push $REPO:master
+    # docker tag cassandra-reaper:latest $REPO:$GIT_HASH
+    # docker push $REPO:$GIT_HASH
 fi
-if [[ ${GITHUB_REF} == "refs/tags"* ]]
-then
+if [[ ${GITHUB_REF} == "refs/tags"* ]]; then
     mkdir -p cassandra-reaper-${VERSION}/server/target
     cp -R src/packaging/bin cassandra-reaper-${VERSION}/
     cp src/server/target/cassandra-reaper-*.jar cassandra-reaper-${VERSION}/server/target
@@ -59,11 +57,11 @@ then
     cd ../..
     tar czf cassandra-reaper-${VERSION}-release.tar.gz cassandra-reaper-${VERSION}/
     sudo mv cassandra-reaper-${VERSION}-release.tar.gz src/packages/
-    docker login -u $DOCKER_USER -p $DOCKER_PASS
-    export REPO=thelastpickle/cassandra-reaper
-    mvn -B -pl src/server/ docker:build -Ddocker.directory=src/server/src/main/docker
-    docker tag cassandra-reaper:latest $REPO:latest
-    docker push $REPO:latest
-    docker tag cassandra-reaper:latest $REPO:$VERSION
-    docker push $REPO:$VERSION
+    # docker login -u $DOCKER_USER -p $DOCKER_PASS
+    # export REPO=thelastpickle/cassandra-reaper
+    # mvn -B -pl src/server/ docker:build -Ddocker.directory=src/server/src/main/docker
+    # docker tag cassandra-reaper:latest $REPO:latest
+    # docker push $REPO:latest
+    # docker tag cassandra-reaper:latest $REPO:$VERSION
+    # docker push $REPO:$VERSION
 fi

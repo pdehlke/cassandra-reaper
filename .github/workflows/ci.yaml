@@ -838,28 +838,28 @@ jobs:
         run: |
           MAVEN_OPTS="-Xmx384m" mvn -B install -DskipTests
 
-      # - name: Build packages
-      #   env:
-      #     DOCKER_USER: ${{ secrets.DOCKERHUB_USER }}
-      #     DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
-      #   run: ./.github/scripts/before_deploy.sh
+      - name: Build packages
+        env:
+          DOCKER_USER: ${{ secrets.DOCKERHUB_USER }}
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
+        run: ./.github/scripts/before_deploy.sh
 
-      # - name: Locate deb and rpm packages for upload
-      #   run: |
-      #     REPO=reaper-deb
-      #     PACKAGE=cassandra-reaper
-      #     VERSION=$(printf 'VER\t${project.version}' | mvn help:evaluate | grep '^VER' | cut -f2)
-      #     if [ "${GITHUB_REF}" = "refs/heads/master" ]
-      #     then
-      #       echo "BETA_RELEASE=yes" >> $GITHUB_ENV
-      #     else
-      #       echo "BETA_RELEASE=no" >> $GITHUB_ENV
-      #     fi
+      - name: Locate deb and rpm packages for upload
+        run: |
+          REPO=reaper-deb
+          PACKAGE=cassandra-reaper
+          VERSION=$(printf 'VER\t${project.version}' | mvn help:evaluate | grep '^VER' | cut -f2)
+          if [ "${GITHUB_REF}" = "refs/heads/master" ]
+          then
+            echo "BETA_RELEASE=yes" >> $GITHUB_ENV
+          else
+            echo "BETA_RELEASE=no" >> $GITHUB_ENV
+          fi
 
-      #     debReleaseFile=$(ls src/packages/*.deb |grep ${VERSION})
-      #     rpmReleaseFile=$(ls src/packages/*.rpm)
-      #     echo "DEB_RELEASE_FILE=${debReleaseFile}" >> $GITHUB_ENV
-      #     echo "RPM_RELEASE_FILE=${rpmReleaseFile}" >> $GITHUB_ENV
+          debReleaseFile=$(ls src/packages/*.deb |grep ${VERSION})
+          rpmReleaseFile=$(ls src/packages/*.rpm)
+          echo "DEB_RELEASE_FILE=${debReleaseFile}" >> $GITHUB_ENV
+          echo "RPM_RELEASE_FILE=${rpmReleaseFile}" >> $GITHUB_ENV
 
       - name: Upload artifacts to GitHub Release
         uses: fnkr/github-action-ghr@v1
