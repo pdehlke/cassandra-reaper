@@ -863,7 +863,7 @@ jobs:
 
       - name: Upload artifacts to GitHub Release
         uses: fnkr/github-action-ghr@v1
-        if: github.event_name == 'release' && github.event.action == 'published'
+        # if: github.event_name == 'release' && github.event.action == 'published'
         env:
           GHR_PATH: src/packages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
